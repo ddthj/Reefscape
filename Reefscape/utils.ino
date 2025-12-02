@@ -21,3 +21,40 @@ void quaternionToEuler(sh2_SensorValue_t* quat, euler_t* ypr) {
   ypr->pitch = (double)asin(-2.0 * (qi * qk - qj * qr) / (sqi + sqj + sqk + sqr));
   ypr->roll = (double)atan2(2.0 * (qj * qk + qi * qr), (-sqi - sqj + sqk + sqr));
 }
+
+void updateTag() {
+  if (Serial2.available() > 0){
+    String newline = Serial2.readStringUntil('\n');
+    char buffer[newline.length() + 1];
+    newline.toCharArray(buffer, newline.length() + 1);
+
+    char* token = strtok(buffer, ",");
+    tag_id = atoi(token);
+    token = strtok(NULL, ",");
+    tag_x = atof(token);
+    token = strtok(NULL, ",");
+    tag_z = atof(token);
+    token = strtok(NULL, ",");
+    tag_r = atof(token);
+
+    tag_heartbeat = millis();
+  }
+}
+
+void updateHeartbeat() {
+  if (tag_heartbeat == 0){
+    digitalWrite(tag_led, HIGH);
+    return;
+  }
+  u_long time = millis();
+  u_long beat = time - tag_heartbeat;
+  if (beat > 1000) { beat = 1000; }
+
+  if (time % beat < 50){
+    digitalWrite(tag_led, LOW);
+  }
+  else {
+    digitalWrite(tag_led, HIGH);
+  }
+
+}

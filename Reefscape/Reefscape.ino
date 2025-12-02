@@ -10,6 +10,8 @@ sh2_SensorValue_t quat;    //https://github.com/adafruit/Adafruit_BNO08x/blob/67
 struct euler_t {double yaw; double pitch; double roll;} rot;
 
 
+
+
 NoU_Motor one(2);
 //double one_rad = DEG_TO_RAD * 45.0;
 double one_rad = DEG_TO_RAD * 30.0;
@@ -24,6 +26,15 @@ NoU_Motor four(1);
 double four_rad = DEG_TO_RAD * 330.0;
 
 float joy_x, joy_y, joy_rot = 0.0;
+
+int target_tag = -1;
+int tag_id = -1;
+float tag_x = 0.0;
+float tag_z = 0.0;
+float tag_r = 0.0;
+u_long tag_heartbeat = 0;
+const int tag_led = 2;
+
 
 
 void setup() {
@@ -41,6 +52,7 @@ void setup() {
   
   RSL::initialize();
   RSL::setState(RSL_DISABLED);
+  pinMode(tag_led, OUTPUT);
 
 }
 
@@ -63,6 +75,10 @@ void loop() {
   if (gyro.getSensorEvent(&quat)){
     quaternionToEuler(&quat, &rot);
   }
+
+  updateTag();
+  updateHeartbeat();
+
 
 
   drive(joy_x, joy_y, joy_rot);
