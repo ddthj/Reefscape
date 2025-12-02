@@ -36,7 +36,8 @@ void updateTag() {
     tag_z = atof(token);
     token = strtok(NULL, ",");
     tag_r = atof(token);
-
+    Serial.print("Detected Tag ");
+    Serial.println(tag_id);
     tag_heartbeat = millis();
   }
 }

@@ -9,7 +9,7 @@ Adafruit_BNO08x gyro(-1);
 sh2_SensorValue_t quat;    //https://github.com/adafruit/Adafruit_BNO08x/blob/67b91b809da04a08fccb8793770343f872daaf43/src/sh2_SensorValue.h#L186
 struct euler_t {double yaw; double pitch; double roll;} rot;
 
-
+bool gyro_good = false;
 
 
 NoU_Motor one(2);
@@ -45,10 +45,11 @@ void setup() {
   Serial2.begin(115200, SERIAL_8N1, 16, 17);
 
   //Gyro Connection
-  if (!gyro.begin_I2C()) {
-    delay(1);
+  if (gyro.begin_I2C()) {
+    gyro_good = true;
+      delay(1);
+      gyro.enableReport(SH2_GAME_ROTATION_VECTOR);
   }
-  gyro.enableReport(SH2_GAME_ROTATION_VECTOR);
   
   RSL::initialize();
   RSL::setState(RSL_DISABLED);
@@ -72,7 +73,7 @@ void loop() {
     RSL::setState(RSL_DISABLED);
   }
 
-  if (gyro.getSensorEvent(&quat)){
+  if (gyro_good && gyro.getSensorEvent(&quat)){
     quaternionToEuler(&quat, &rot);
   }
 

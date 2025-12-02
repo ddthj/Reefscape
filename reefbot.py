@@ -1,11 +1,14 @@
-from MiniTags.MiniTags import MiniTags
-from MiniTags.Communicator import Communicator
-from math import sqrt, atan2
+from MiniTags import MiniTags
+from Communicator import Communicator
+from math import atan2
 
 # Example usage
 minitags = MiniTags()
 minitags.calibrate()   # Loads/Creates camera parameters to correct for lens distortion
 uart = Communicator()  # Allows data to be sent to the ESP32 over UART
+
+# Init heartbeat with tag -1
+uart.send("-1,0,0,0")
 
 while True:
     closest_tag = None
