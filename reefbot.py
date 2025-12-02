@@ -13,7 +13,7 @@ while True:
 
     for tag in minitags.get_tags():
         trans = tag.pose_t
-        length = sqrt(trans[0]**2 + trans[2]**2)
+        length = trans[0]**2 + trans[2]**2
         if length > closest_distance: continue
 
         closest_tag = tag
