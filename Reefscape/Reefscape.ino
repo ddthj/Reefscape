@@ -32,8 +32,8 @@ int tag_id = -1;
 float tag_x = 0.0;
 float tag_z = 0.0;
 float tag_r = 0.0;
-u_long tag_heartbeat = 0;
-const int tag_led = 2;
+u_long heartbeat = 0;
+const int tag_led = 5;
 
 
 

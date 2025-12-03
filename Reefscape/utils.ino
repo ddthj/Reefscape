@@ -38,24 +38,20 @@ void updateTag() {
     tag_r = atof(token);
     Serial.print("Detected Tag ");
     Serial.println(tag_id);
-    tag_heartbeat = millis();
+    heartbeat = millis();
   }
 }
 
 void updateHeartbeat() {
-  if (tag_heartbeat == 0){
-    digitalWrite(tag_led, HIGH);
+  if (heartbeat == 0){
+    digitalWrite(tag_led, LOW);
     return;
   }
-  u_long time = millis();
-  u_long beat = time - tag_heartbeat;
-  if (beat > 1000) { beat = 1000; }
-
-  if (time % beat < 50){
+  long delay = 10;
+  if (tag_id != -1) {delay = 250;}
+  if (millis() < heartbeat + delay){
     digitalWrite(tag_led, LOW);
-  }
-  else {
+  } else {
     digitalWrite(tag_led, HIGH);
   }
-
 }

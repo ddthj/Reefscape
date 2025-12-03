@@ -1,6 +1,7 @@
 from MiniTags import MiniTags
 from Communicator import Communicator
 from math import atan2
+import time
 
 # Example usage
 minitags = MiniTags()
@@ -9,6 +10,7 @@ uart = Communicator()  # Allows data to be sent to the ESP32 over UART
 
 # Init heartbeat with tag -1
 uart.send("-1,0,0,0")
+last_tag = time.time()
 
 while True:
     closest_tag = None
@@ -26,3 +28,7 @@ while True:
         t = closest_tag.pose_t
         rot = atan2(t[0], t[2])
         uart.send("%s,%s,%s,%s" % (closest_tag.tag_id, t[0], t[2], rot))
+        last_tag = time.time()
+    elif last_tag + 5 < time.time():
+        uart.send("-1,0,0,0")
+        last_tag = time.time()
