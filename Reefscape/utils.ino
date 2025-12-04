@@ -44,14 +44,14 @@ void updateTag() {
 
 void updateHeartbeat() {
   if (heartbeat == 0){
-    digitalWrite(tag_led, LOW);
+    digitalWrite(tag_led, HIGH);
     return;
   }
   long delay = 10;
   if (tag_id != -1) {delay = 250;}
   if (millis() < heartbeat + delay){
-    digitalWrite(tag_led, LOW);
-  } else {
     digitalWrite(tag_led, HIGH);
+  } else {
+    digitalWrite(tag_led, LOW);
   }
 }

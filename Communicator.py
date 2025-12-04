@@ -20,6 +20,7 @@ class Communicator:
         self.baudrate = baud
         self.serial = None
         self.debug = debug
+
         try:
             self.serial = serial.Serial(self.port, self.baudrate, timeout=1)
             if self.debug: print("Opened Serial Port!")

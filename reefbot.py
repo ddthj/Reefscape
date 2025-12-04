@@ -18,7 +18,9 @@ while True:
 
     for tag in minitags.get_tags():
         trans = tag.pose_t
-        length = trans[0]**2 + trans[2]**2
+        x = float(trans[0])
+        z = float(trans[2])
+        length = x**2 + z**2
         if length > closest_distance: continue
 
         closest_tag = tag
@@ -26,8 +28,10 @@ while True:
 
     if closest_tag:
         t = closest_tag.pose_t
-        rot = atan2(t[0], t[2])
-        uart.send("%s,%s,%s,%s" % (closest_tag.tag_id, t[0], t[2], rot))
+        x = float(t[0])
+        z = float(t[2])
+        rot = atan2(x, z)
+        uart.send("%s,%s,%s,%s" % (closest_tag.tag_id, x, z, rot))
         last_tag = time.time()
     elif last_tag + 5 < time.time():
         uart.send("-1,0,0,0")

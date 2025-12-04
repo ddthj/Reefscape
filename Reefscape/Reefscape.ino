@@ -33,7 +33,7 @@ float tag_x = 0.0;
 float tag_z = 0.0;
 float tag_r = 0.0;
 u_long heartbeat = 0;
-const int tag_led = 5;
+const int tag_led = 26;
 
 
 
@@ -41,8 +41,8 @@ void setup() {
 
   PestoLink.begin("Werbenjagermanjensen");
   Serial.begin(115200);
-  Serial.println("Hello!");
-  Serial2.begin(115200, SERIAL_8N1, 16, 17);
+  Serial.println("Hello!");.
+  Serial2.begin(115200, SERIAL_8N1, 5, 4);
 
   //Gyro Connection
   if (gyro.begin_I2C()) {
