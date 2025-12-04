@@ -7,13 +7,15 @@ import numpy as np
 
 # My camera produces minimal distortion and I forgot to calibrate it at the final resolution, so I am going to use a
 # guess for the camera matrix
+'''
 fx = (2.75 / 6.45) * 480
 fy = (2.75 / 3.63) * 240
 oops = np.array([[fx, 0, 240],
                  [0, fy, 120],
                  [0, 0, 1]])
+'''
 
-minitags = MiniTags(camera_matrix=oops)
+minitags = MiniTags()
 uart = Communicator()  # Allows data to be sent to the ESP32 over UART
 
 # Init heartbeat with tag -1
