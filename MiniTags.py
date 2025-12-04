@@ -53,8 +53,9 @@ class MiniTags:
         self.detector = apt.Detector(families=self.tag_standard, nthreads=1, quad_decimate=1.0)
         txt_camera = "USB CAMERA" if self.camera.capture_method == Camera.OPENCV else "RASPBERRY PI CAMERA"
         print("MiniFRC tags starting up using %s..." % txt_camera)
+        self.calibrate()
 
-    def calibrate(self) -> bool:
+    def calibrate(self):
         """
         calibrate() attempts to load 'camera.npy' or generate it if it doesn't exist.
         There are a couple levels of calibration available depending on what you need:
@@ -83,16 +84,15 @@ class MiniTags:
         self.pyapriltags_matrix = (matrix[0][0], matrix[1][1], matrix[0][2], matrix[1][2])
         self.camera_distortion = distortion
         self.camera_optimizer, roi = cv2.getOptimalNewCameraMatrix(matrix, distortion, self.camera_resolution, 1)
-        return True
 
     def get_tags(self) -> List[apt.Detection]:
         c_image = self.camera.read()
         if self.camera_optimizer is not None:
             c_image = cv2.undistort(c_image, self.opencv_matrix, self.camera_distortion, None, self.camera_optimizer)
         g_image = cv2.cvtColor(c_image, cv2.COLOR_BGR2GRAY)
-        if self.opencv_matrix is not None:
+        if self.opencv_matrix is not None and self.pyapriltags_matrix is not None:
             detections = self.detector.detect(g_image, True, self.pyapriltags_matrix, self.tag_size)
         else:
             detections = []
-            print("No camera matrix! Set manually or call calibrate() before detecting tags!")
+            print("No camera matrix or parameters! Call calibrate() before detecting tags!")
         return detections
