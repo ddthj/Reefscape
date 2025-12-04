@@ -7,11 +7,9 @@ import numpy as np
 
 fx = (2.75 / 6.45) * 480
 fy = (2.75 / 3.63) * 240
-oops = np.array([
-    [fx, 0, 240],
-    [0, fy, 120],
-    [0, 0, 1],
-])
+oops = np.array([[fx, 0, 240],
+                 [0, fy, 120],
+                 [0, 0, 1]])
 minitags = MiniTags(camera_matrix=oops)
 # My camera produces minimal distortion and I forgot to calibrate it at the final resolution, so I am going to use a
 # guess for the camera matrix

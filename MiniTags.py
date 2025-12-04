@@ -4,6 +4,7 @@ from typing import List
 
 import calibrate
 import Camera
+import numpy as np
 
 
 class MiniTags:
@@ -36,10 +37,10 @@ class MiniTags:
         """
 
         self.camera_resolution = camera_resolution
-        self.camera_matrix = camera_matrix
+        self.opencv_matrix = camera_matrix
 
         # This is exclusively set by calibration code
-        self.raw_matrix = None
+        self.pyapriltags_matrix = None
         self.camera_distortion = None
         self.camera_optimizer = None
 
@@ -68,38 +69,29 @@ class MiniTags:
         - Great for correcting distortion in fisheye/wide-angle lenses
         - Only needs to be done once, a camera.npy file is created to store the settings
         """
-        if self.camera_matrix is None:
+        if self.opencv_matrix is None:
             ret, matrix, distortion = calibrate.load_camera_properties()
             if not ret:
                 print("Running Camera Calibration to generate camera.npy... Please Read calibrate.py for more info...")
                 ret = calibrate.calibrate_camera(self.camera, self.checker_size)
                 if ret:
                     self.calibrate()
-            else:
-                self.raw_matrix = matrix
-                self.camera_matrix = (matrix[0][0], matrix[1][1], matrix[0][2], matrix[1][2])
-                self.camera_distortion = distortion
-                self.camera_optimizer, roi = cv2.getOptimalNewCameraMatrix(matrix,
-                                                                           distortion,
-                                                                           self.camera_resolution,
-                                                                           1,
-                                                                           self.camera_resolution)
-            return True
+        else:
+            matrix = self.opencv_matrix
+            distortion = np.zeros((4, 1))
+
+        self.pyapriltags_matrix = (matrix[0][0], matrix[1][1], matrix[0][2], matrix[1][2])
+        self.camera_distortion = distortion
+        self.camera_optimizer, roi = cv2.getOptimalNewCameraMatrix(matrix, distortion, self.camera_resolution, 1)
+        return True
 
     def get_tags(self) -> List[apt.Detection]:
-        color_image = self.camera.read()
+        c_image = self.camera.read()
         if self.camera_optimizer is not None:
-            color_image = cv2.undistort(color_image,
-                                        self.raw_matrix,
-                                        self.camera_distortion,
-                                        None,
-                                        self.camera_optimizer)
-        gray_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2GRAY)
-        if self.camera_matrix is not None:
-            detections = self.detector.detect(gray_image,
-                                              estimate_tag_pose=True,
-                                              camera_params=self.camera_matrix,
-                                              tag_size=self.tag_size)
+            c_image = cv2.undistort(c_image, self.opencv_matrix, self.camera_distortion, None, self.camera_optimizer)
+        g_image = cv2.cvtColor(c_image, cv2.COLOR_BGR2GRAY)
+        if self.opencv_matrix is not None:
+            detections = self.detector.detect(g_image, True, self.pyapriltags_matrix, self.tag_size)
         else:
             detections = []
             print("No camera matrix! Set manually or call calibrate() before detecting tags!")
