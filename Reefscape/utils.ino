@@ -42,10 +42,16 @@ void updateTag() {
     token = strtok(NULL, ",");
     tag_r = atof(token);
     Serial.print("Detected Tag ");
-    Serial.println(tag_z);
+    Serial.print(tag_id);
+    Serial.print(": ");
+    Serial.print(tag_x);
+    Serial.print("x, ");
+    Serial.print(tag_z);
+    Serial.print("z, ");
+    Serial.println(tag_r);
     heartbeat = millis();
     // positive x is left. 0.16 == ~160mm
-    // positive z is forward. 0.11 is minimum which is ~50mm. 0.27 is 130mm and grows linearly (0.54 was 260mm)
+    // positive z is forward. Tags can be detected as close as 50mm but 100mm is much more reliable.
     // positive r is counterclockwise +- 0.30 rad. not really useful eh?
 
   }
