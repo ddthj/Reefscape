@@ -23,6 +23,7 @@ class MiniTags:
                  camera_type: int = Camera.PICAMERA,
                  camera_resolution: tuple = (480, 240),
                  camera_matrix=None,
+                 camera_distortion=None,
                  checker_size: float = 0.02261,
                  tag_size: float = 0.0405,
                  tag_type: str = "tag36h11",
@@ -38,10 +39,10 @@ class MiniTags:
 
         self.camera_resolution = camera_resolution
         self.opencv_matrix = camera_matrix
+        self.camera_distortion = camera_distortion
 
         # This is exclusively set by calibration code
         self.pyapriltags_matrix = None
-        self.camera_distortion = None
         self.camera_optimizer = None
 
         self.checker_size = checker_size
@@ -82,7 +83,7 @@ class MiniTags:
             distortion = np.zeros((4, 1))
 
         self.pyapriltags_matrix = (matrix[0][0], matrix[1][1], matrix[0][2], matrix[1][2])
-        self.camera_distortion = distortion
+        if self.camera_distortion is None: self.camera_distortion = distortion
         self.camera_optimizer, roi = cv2.getOptimalNewCameraMatrix(matrix, distortion, self.camera_resolution, 1)
 
     def get_tags(self) -> List[apt.Detection]:
