@@ -25,6 +25,11 @@ void quaternionToEuler(sh2_SensorValue_t* quat, euler_t* ypr) {
 void updateTag() {
   if (Serial2.available() > 0){
     String newline = Serial2.readStringUntil('\n');
+    int commaCount = 0;
+    for (int i = 0; i < newline.length(); i++) {if (newline.charAt(i) == ',') {commaCount++;}}
+    // No crashing! Bad!
+    if (commaCount != 3) {return;}
+
     char buffer[newline.length() + 1];
     newline.toCharArray(buffer, newline.length() + 1);
 
@@ -37,8 +42,12 @@ void updateTag() {
     token = strtok(NULL, ",");
     tag_r = atof(token);
     Serial.print("Detected Tag ");
-    Serial.println(tag_id);
+    Serial.println(tag_r);
     heartbeat = millis();
+    // positive x is left. 0.16 == ~160mm
+    // positive z is forward. 0.11 is minimum which is ~50mm. 0.27 is 130mm and grows linearly (0.54 was 260mm)
+    // positive r is counterclockwise +- 0.30 rad. not really useful eh?
+
   }
 }
 

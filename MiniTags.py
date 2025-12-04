@@ -21,7 +21,7 @@ class MiniTags:
     def __init__(self,
                  camera_type: int = Camera.PICAMERA,
                  camera_resolution: tuple = (480, 240),
-                 camera_matrix: tuple = None,
+                 camera_matrix=None,
                  checker_size: float = 0.02261,
                  tag_size: float = 0.0405,
                  tag_type: str = "tag36h11",
