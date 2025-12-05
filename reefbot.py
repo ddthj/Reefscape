@@ -42,7 +42,7 @@ while True:
         t = -np.dot(r, closest_tag.pose_t)
         x = t[0].item()
         z = t[2].item()
-        rot = atan2(r[0, 2], r[2, 2])
+        rot = -atan2(r[0, 2], r[2, 2])
         uart.send("%s,%s,%s,%s" % (closest_tag.tag_id, x, z, rot))
         last_tag = time.time()
     elif last_tag + 3 < time.time():
