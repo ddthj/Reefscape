@@ -25,7 +25,7 @@ last_tag = time.time()
 
 while True:
     closest_tag = None
-    closest_distance = 9999
+    closest_distance = 99999
 
     for tag in minitags.get_tags():
         trans = tag.pose_t
@@ -38,11 +38,10 @@ while True:
         closest_distance = length
 
     if closest_tag:
-        t = closest_tag.pose_t
-        r = closest_tag.pose_R
+        r = closest_tag.pose_R.T
+        t = -np.dot(r, closest_tag.pose_t)
         x = t[0].item()
         z = t[2].item()
-        # rot = atan2(x, z) angle to face tag
         rot = atan2(r[0, 2], r[2, 2])
         uart.send("%s,%s,%s,%s" % (closest_tag.tag_id, x, z, rot))
         last_tag = time.time()
