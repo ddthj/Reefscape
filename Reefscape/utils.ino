@@ -1,15 +1,22 @@
+// Util functions for Reefbot
+// In no particular order...
 
-void configureMotor(NoU_Motor* motor) {
-  motor->setMinimumOutput(0.25);
-  motor->setDeadband(0.01);
-  motor->setExponent(0.5);
+
+double wrap(double a) {
+  a = fmod(a + PI, TWO_PI);
+  if (a < 0){ a += TWO_PI; }
+  return a - PI;
 }
 
-void drive(float x, float y, float r) {
-  float pwr = fmin(fabs(x) + fabs(y) + fabs(r), 1.0);
-  if (pwr == 0.0){return;}
-  double dir = atan2(x, y) - rot.yaw; // Converted to local angle
 
+void configureMotor(NoU_Motor* motor) {
+  // Configures the motor curves for better drive handling
+  motor->setMinimumOutput(0.25); // Require more power to start moving
+  motor->setDeadband(0.01);
+  motor->setExponent(0.5); // Rapidly add power with diminishing return.
+}
+
+void drive(double dir, float pwr, float r) {
   float raw1 = pwr * cos(dir - rad1) * (1-fabs(r));
   float raw2 = pwr * cos(dir - rad2) * (1-fabs(r));
   float raw3 = pwr * cos(dir - rad3) * (1-fabs(r));
@@ -62,14 +69,14 @@ void updateTag() {
     tag_z = atof(token);
     token = strtok(NULL, ",");
     tag_r = atof(token);
-    Serial.print("Detected Tag ");
-    Serial.print(tag_id);
-    Serial.print(": ");
-    Serial.print(tag_x);
-    Serial.print("x, ");
-    Serial.print(tag_z);
-    Serial.print("z, ");
-    Serial.println(tag_r);
+    //Serial.print("Detected Tag ");
+    //Serial.print(tag_id);
+    //Serial.print(": ");
+    //Serial.print(tag_x);
+    //Serial.print("x, ");
+    //Serial.print(tag_z);
+    //Serial.print("z, ");
+    //Serial.println(tag_r);
     heartbeat = millis();
     // TAG DATA IS GIVEN IN THE TAG'S COORDINATE SYSTEM
     // positive x is left

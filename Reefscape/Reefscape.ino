@@ -39,8 +39,12 @@ const int tag_led = 26;
 //Drive modes:
 // 0 = Field-oriented control
 // 1 = Robot-oriented control
-int drive_mode = 0
-float target_heading = 0.0;
+// 2 = Tag-oriented control
+bool toggle_drive = false;
+int drive_mode = 0;
+double target_heading = 0.0;
+double drive_angle = 0.0;
+float drive_rotation = 0;
 
 
 void setup() {
@@ -69,6 +73,16 @@ void loop() {
     joy_y = -PestoLink.getAxis(1);
     joy_rot = -PestoLink.getAxis(2);
 
+    if (toggle_drive == false){
+      toggle_drive = PestoLink.buttonHeld(3);
+      if (toggle_drive == true){
+        if (drive_mode == 0) {drive_mode = 1;}
+        else {drive_mode = 0;}
+      }
+    } else{
+      toggle_drive = PestoLink.buttonHeld(3);
+    }
+
     RSL::setState(RSL_ENABLED);
   }
   else {
@@ -84,20 +98,28 @@ void loop() {
 
   if (drive_mode == 0){
     // Field-oriented control
-    double dir = atan2(x, y) - rot.yaw; // Rotate to field north
+    drive_angle = atan2(joy_x, joy_y) - rot.yaw; // Rotate to field north
   } else if (drive_mode == 1){
     // Robot-oriented control
-    double dir = atan2(x, y);
+    drive_angle = atan2(joy_x, joy_y);
   }
-  if (joy_rot > 0.01){
+  if (fabs(joy_rot) > 0.1){
     target_heading = rot.yaw;
+    drive_rotation = joy_rot * 0.5;
+  } else {
+    double error = wrap(target_heading - rot.yaw);
+    drive_rotation = error * 0.5;
   }
-  
+
+  float pwr = fmin(fabs(joy_x) + fabs(joy_y) + fabs(drive_rotation), 1.0);
+  if (pwr > 0.0) {
+    drive(drive_angle, pwr, drive_rotation);
+  }
 
 
   updateTag();
   updateHeartbeat();
-  drive(joy_x, joy_y, joy_rot * 0.5);
+  
   RSL::update();
 }
 
