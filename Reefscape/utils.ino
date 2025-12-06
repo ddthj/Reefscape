@@ -1,10 +1,31 @@
 
-float get_power(double drive_angle, double motor_angle, double robot_angle, float rot, float power, float friction){
-  // Determines the power output to drive a motor at to move the robot in the desired direction
-  float local_angle = drive_angle - robot_angle;
-  float translation = power * cos(local_angle - motor_angle);
-  float raw_output = rot + (1-fabs(rot)) * translation;
-  return friction * sgn(translation) + (1-friction) * raw_output;
+void configureMotor(NoU_Motor* motor) {
+  motor->setMinimumOutput(0.25);
+  motor->setDeadband(0.01);
+  motor->setExponent(0.5);
+}
+
+void drive(float x, float y, float r) {
+  float pwr = fmin(fabs(x) + fabs(y) + fabs(r), 1.0);
+  if (pwr == 0.0){return;}
+  double dir = atan2(x, y) - rot.yaw; // Converted to local angle
+
+  float raw1 = pwr * cos(dir - rad1) * (1-fabs(r));
+  float raw2 = pwr * cos(dir - rad2) * (1-fabs(r));
+  float raw3 = pwr * cos(dir - rad3) * (1-fabs(r));
+  float raw4 = pwr * cos(dir - rad4) * (1-fabs(r));
+
+  float s = fmax(fmax(fabs(raw1), fabs(raw2)), fmax(fabs(raw3), fabs(raw4))) / pwr;
+
+  float pwr1 = (raw1 + r) / s;
+  float pwr2 = (raw2 + r) / s;
+  float pwr3 = (raw3 + r) / s;
+  float pwr4 = (raw4 + r) / s;
+
+  one.set(pwr1);
+  two.set(pwr2);
+  three.set(pwr3);
+  four.set(pwr4);
 }
 
 void quaternionToEuler(sh2_SensorValue_t* quat, euler_t* ypr) {
@@ -50,9 +71,11 @@ void updateTag() {
     Serial.print("z, ");
     Serial.println(tag_r);
     heartbeat = millis();
-    // positive x is left. 0.16 == ~160mm
-    // positive z is forward. Tags can be detected as close as 50mm but 100mm is much more reliable.
-    // positive r is counterclockwise +- 0.30 rad. not really useful eh?
+    // TAG DATA IS GIVEN IN THE TAG'S COORDINATE SYSTEM
+    // positive x is left
+    // negative z is forward. Tags can be detected as close as 0.05m but 0.10m is much more reliable.
+    // positive r is counterclockwise. This is the difference between the robot's angle and the tag's angle
+    // where 0 means the bot is normal to the tag's plane
 
   }
 }

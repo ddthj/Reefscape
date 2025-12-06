@@ -13,17 +13,17 @@ bool gyro_good = false;
 
 
 NoU_Motor one(2);
-//double one_rad = DEG_TO_RAD * 45.0;
-double one_rad = DEG_TO_RAD * 30.0;
+//double rad1 = DEG_TO_RAD * 45.0;
+double rad1 = DEG_TO_RAD * 30.0;
 NoU_Motor two(3);
-//double two_rad = DEG_TO_RAD * 135.0;
-double two_rad = DEG_TO_RAD * 150.0;
+//double rad2 = DEG_TO_RAD * 135.0;
+double rad2 = DEG_TO_RAD * 150.0;
 NoU_Motor three(4);
-//double three_rad = DEG_TO_RAD * 225.0;
-double three_rad = DEG_TO_RAD * 210.0;
+//double rad3 = DEG_TO_RAD * 225.0;
+double rad3 = DEG_TO_RAD * 210.0;
 NoU_Motor four(1);
-//double four_rad = DEG_TO_RAD * 315.0;
-double four_rad = DEG_TO_RAD * 330.0;
+//double rad4 = DEG_TO_RAD * 315.0;
+double rad4 = DEG_TO_RAD * 330.0;
 
 float joy_x, joy_y, joy_rot = 0.0;
 
@@ -36,25 +36,30 @@ u_long heartbeat = 0;
 const int tag_led = 26;
 
 
+//Drive modes:
+// 0 = Field-oriented control
+// 1 = Robot-oriented control
+int drive_mode = 0
+float target_heading = 0.0;
+
 
 void setup() {
-
   PestoLink.begin("Werbenjagermanjensen");
   Serial.begin(115200);
   Serial.println("Hello!");
   Serial2.begin(115200, SERIAL_8N1, 5, 4);
-
-  //Gyro Connection
   if (gyro.begin_I2C()) {
     gyro_good = true;
       delay(1);
       gyro.enableReport(SH2_GAME_ROTATION_VECTOR);
   }
-  
+  configureMotor(&one);
+  configureMotor(&two);
+  configureMotor(&three);
+  configureMotor(&four);
+  pinMode(tag_led, OUTPUT);
   RSL::initialize();
   RSL::setState(RSL_DISABLED);
-  pinMode(tag_led, OUTPUT);
-
 }
 
 
@@ -77,29 +82,26 @@ void loop() {
     quaternionToEuler(&quat, &rot);
   }
 
+  if (drive_mode == 0){
+    // Field-oriented control
+    double dir = atan2(x, y) - rot.yaw; // Rotate to field north
+  } else if (drive_mode == 1){
+    // Robot-oriented control
+    double dir = atan2(x, y);
+  }
+  if (joy_rot > 0.01){
+    target_heading = rot.yaw;
+  }
+  
+
+
   updateTag();
   updateHeartbeat();
-
-
-
-  drive(joy_x, joy_y, joy_rot);
+  drive(joy_x, joy_y, joy_rot * 0.5);
   RSL::update();
 }
 
 
-void drive(float x, float y, float z) {
-  float magnitude = abs(x) + abs(y);
-  if (magnitude != 0.0){
-    x /= magnitude;
-    y /= magnitude;
-  }
 
-  double desired_direction = atan2(x, y);
-
-  one.set(get_power(desired_direction, one_rad, rot.yaw, z, magnitude, 0.15));
-  two.set(get_power(desired_direction, two_rad, rot.yaw, z, magnitude, 0.15));
-  three.set(get_power(desired_direction, three_rad, rot.yaw, z, magnitude, 0.15));
-  four.set(get_power(desired_direction, four_rad, rot.yaw, z, magnitude, 0.15));
-}
 
 
