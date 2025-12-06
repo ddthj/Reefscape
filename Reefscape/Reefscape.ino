@@ -52,8 +52,8 @@ float target_tag_r = 0.0;
 u_long target_heartbeat = 0;
 
 int auto_align = 0;
-float align_z1 = 0.3;
-float align_z2 = 0.1;
+float align_z1 = -0.3;
+float align_z2 = -0.1;
 float align_x1 = 0.0;
 float align_power = 0.5;
 float align_avg_speed = 50; // mm/s
@@ -82,18 +82,21 @@ void setup() {
 
 
 void loop() {
-  if (PestoLink.update()) {
+  if (PestoLink.isConnected()) {
     joy_x = -PestoLink.getAxis(0);
     joy_y = -PestoLink.getAxis(1);
     joy_rot = -PestoLink.getAxis(2);
-
+    
+    
     if (PestoLink.buttonHeld(14)){
       auto_align = 14;
+      Serial.println("14 Pushed!!!");
     } else if (PestoLink.buttonHeld(15)){
       auto_align = 15;
     } else {
       auto_align = 0;
     }
+    
 
     if (toggle_drive == false){
       toggle_drive = PestoLink.buttonHeld(3);
@@ -127,6 +130,7 @@ void loop() {
       // Robot-oriented control
       drive_angle = atan2(joy_x, joy_y);
     }
+
     if (fabs(joy_rot) > 0.05){
       target_heading = rot.yaw;
       drive_rotation = fmin(joy_rot, 0.5);
@@ -134,6 +138,7 @@ void loop() {
       double error = wrap(target_heading - rot.yaw);
       drive_rotation = error * 0.5;
     }
+
     drive_power = fmin(fabs(joy_x) + fabs(joy_y) + fabs(drive_rotation), 1.0);
   } else{
     if (target_tag_id == -1){
@@ -153,7 +158,11 @@ void loop() {
     float error_distance = sqrt(x_error * x_error + z_error * z_error);
     float error_time = error_distance / align_avg_speed;
 
-    if (millis() < target_heartbeat + (error_time * 1000)){
+    Serial.println("Updated Tag Tracking!");
+    Serial.print("X: "); Serial.print(x_error); Serial.print(" Z: "); Serial.println(z_error);
+    Serial.print("Distance: "); Serial.print(error_distance); Serial.print(" time: "); Serial.println(error_time);
+
+    if (millis() < target_heartbeat + error_time){
       drive_angle = atan2(x_error, z_error); // may need to subtract robot yaw here?
       drive_power = align_power;
     } else {
