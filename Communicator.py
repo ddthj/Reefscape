@@ -31,7 +31,7 @@ class Communicator:
                 if self.debug: print("Opened Serial Port!")
                 sleep(2)
             except serial.SerialException as e:
-                self.serial = None
+                self.finish()
                 time.sleep(5)
                 print("Could not open serial port %s" % e)
 
@@ -42,10 +42,11 @@ class Communicator:
                 self.serial.write(data_string.encode('utf-8'))
             except Exception as e:
                 print(e)
-                self.serial = None
+                self.finish()
                 self.connect()
             if self.debug: print(data_string.strip())
 
     def finish(self):
         if self.serial is not None:
             self.serial.close()
+            self.serial = None
