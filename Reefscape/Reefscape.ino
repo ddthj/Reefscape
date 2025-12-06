@@ -55,8 +55,8 @@ int auto_align = 0;
 float align_z1 = -0.3;
 float align_z2 = -0.1;
 float align_x1 = 0.0;
-float align_power = 0.5;
-float align_avg_speed = 50; // mm/s
+float align_gain = 5;
+float align_avg_speed = 0.1; // m/s
 u_long dead_time = 0;
 
 
@@ -148,23 +148,27 @@ void loop() {
       target_tag_z = tag_z;
       target_tag_r = tag_r;
       target_heartbeat = heartbeat;
+      target_heading = wrap(target_tag_r+rot.yaw);
     }
 
     //TODO - multi-step alignment
     float x_error = align_x1 - target_tag_x;
     float z_error = align_z1 - target_tag_z;
-    float r_error = target_tag_r;
 
     float error_distance = sqrt(x_error * x_error + z_error * z_error);
-    float error_time = error_distance / align_avg_speed;
+    //1000 ms/s * m * m/s
+    int error_time = (int)(1000 * error_distance / align_avg_speed);
 
-    Serial.println("Updated Tag Tracking!");
-    Serial.print("X: "); Serial.print(x_error); Serial.print(" Z: "); Serial.println(z_error);
-    Serial.print("Distance: "); Serial.print(error_distance); Serial.print(" time: "); Serial.println(error_time);
+    Serial.println("Rotation Stuff!");
+    Serial.print(target_heading); Serial.print(" "); Serial.println(rot.yaw);
+    //Serial.println("Updated Tag Tracking!");
+    //Serial.print("X: "); Serial.print(x_error); Serial.print(" Z: "); Serial.println(z_error);
+    //Serial.print("Distance: "); Serial.print(error_distance); Serial.print(" time: "); Serial.println(error_time);
 
     if (millis() < target_heartbeat + error_time){
       drive_angle = atan2(x_error, z_error); // may need to subtract robot yaw here?
-      drive_power = align_power;
+      drive_power = fmin(align_gain * error_distance, 0.66);
+      drive_rotation = wrap(target_heading - rot.yaw)  * 0.33;
     } else {
       drive_power = 0.0;
     }
