@@ -27,15 +27,6 @@ double rad4 = DEG_TO_RAD * 330.0;
 
 float joy_x, joy_y, joy_rot = 0.0;
 
-int target_tag = -1;
-int tag_id = -1;
-float tag_x = 0.0;
-float tag_z = 0.0;
-float tag_r = 0.0;
-u_long heartbeat = 0;
-const int tag_led = 26;
-
-
 //Drive modes:
 // 0 = Field-oriented control
 // 1 = Robot-oriented control
@@ -45,6 +36,29 @@ int drive_mode = 0;
 double target_heading = 0.0;
 double drive_angle = 0.0;
 float drive_rotation = 0;
+float drive_power = 0;
+
+const int tag_led = 26;
+int tag_id = -1;
+float tag_x = 0.0;
+float tag_z = 0.0;
+float tag_r = 0.0;
+u_long heartbeat = 0;
+
+int target_tag_id = -1;
+float target_tag_x = 0.0;
+float target_tag_z = 0.0;
+float target_tag_r = 0.0;
+u_long target_heartbeat = 0;
+
+int auto_align = 0;
+float align_z1 = 0.3;
+float align_z2 = 0.1;
+float align_x1 = 0.0;
+float align_power = 0.5;
+float align_avg_speed = 50; // mm/s
+u_long dead_time = 0;
+
 
 
 void setup() {
@@ -73,6 +87,14 @@ void loop() {
     joy_y = -PestoLink.getAxis(1);
     joy_rot = -PestoLink.getAxis(2);
 
+    if (PestoLink.buttonHeld(14)){
+      auto_align = 14;
+    } else if (PestoLink.buttonHeld(15)){
+      auto_align = 15;
+    } else {
+      auto_align = 0;
+    }
+
     if (toggle_drive == false){
       toggle_drive = PestoLink.buttonHeld(3);
       if (toggle_drive == true){
@@ -96,30 +118,56 @@ void loop() {
     quaternionToEuler(&quat, &rot);
   }
 
-  if (drive_mode == 0){
-    // Field-oriented control
-    drive_angle = atan2(joy_x, joy_y) - rot.yaw; // Rotate to field north
-  } else if (drive_mode == 1){
-    // Robot-oriented control
-    drive_angle = atan2(joy_x, joy_y);
-  }
-  if (fabs(joy_rot) > 0.05){
-    target_heading = rot.yaw;
-    drive_rotation = min(joy_rot, 0.5);
-  } else {
-    double error = wrap(target_heading - rot.yaw);
-    drive_rotation = error * 0.5;
+  if (auto_align == 0){
+    target_tag_id = -1;
+    if (drive_mode == 0){
+      // Field-oriented control
+      drive_angle = atan2(joy_x, joy_y) - rot.yaw; // Rotate to field north
+    } else if (drive_mode == 1){
+      // Robot-oriented control
+      drive_angle = atan2(joy_x, joy_y);
+    }
+    if (fabs(joy_rot) > 0.05){
+      target_heading = rot.yaw;
+      drive_rotation = fmin(joy_rot, 0.5);
+    } else {
+      double error = wrap(target_heading - rot.yaw);
+      drive_rotation = error * 0.5;
+    }
+    drive_power = fmin(fabs(joy_x) + fabs(joy_y) + fabs(drive_rotation), 1.0);
+  } else{
+    if (target_tag_id == -1){
+      target_tag_id = tag_id; // Select most recently seen tag to lock on to
+    } else if (target_tag_id == tag_id){
+      target_tag_x = tag_x;
+      target_tag_z = tag_z;
+      target_tag_r = tag_r;
+      target_heartbeat = heartbeat;
+    }
+
+    //TODO - multi-step alignment
+    float x_error = align_x1 - target_tag_x;
+    float z_error = align_z1 - target_tag_z;
+    float r_error = target_tag_r;
+
+    float error_distance = sqrt(x_error * x_error + z_error * z_error);
+    float error_time = error_distance / align_avg_speed;
+
+    if (millis() < target_heartbeat + (error_time * 1000)){
+      drive_angle = atan2(x_error, z_error); // may need to subtract robot yaw here?
+      drive_power = align_power;
+    } else {
+      drive_power = 0.0;
+    }
   }
 
-  float pwr = fmin(fabs(joy_x) + fabs(joy_y) + fabs(drive_rotation), 1.0);
-  if (pwr > 0.0) {
-    drive(drive_angle, pwr, drive_rotation);
+  if (drive_power > 0.0) {
+    drive(drive_angle, drive_power, drive_rotation);
   }
 
 
   updateTag();
   updateHeartbeat();
-  
   RSL::update();
 }
 
