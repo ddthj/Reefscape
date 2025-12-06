@@ -103,9 +103,9 @@ void loop() {
     // Robot-oriented control
     drive_angle = atan2(joy_x, joy_y);
   }
-  if (fabs(joy_rot) > 0.1){
+  if (fabs(joy_rot) > 0.05){
     target_heading = rot.yaw;
-    drive_rotation = joy_rot * 0.5;
+    drive_rotation = min(joy_rot, 0.5);
   } else {
     double error = wrap(target_heading - rot.yaw);
     drive_rotation = error * 0.5;
