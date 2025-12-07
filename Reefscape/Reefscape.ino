@@ -56,7 +56,7 @@ float align_z1 = -0.3;
 float align_z2 = -0.1;
 float align_x1 = 0.0;
 float align_gain = 5;
-float align_avg_speed = 0.1; // m/s
+float align_avg_speed = 0.25; // m/s
 u_long dead_time = 0;
 
 
@@ -90,7 +90,6 @@ void loop() {
     
     if (PestoLink.buttonHeld(14)){
       auto_align = 14;
-      Serial.println("14 Pushed!!!");
     } else if (PestoLink.buttonHeld(15)){
       auto_align = 15;
     } else {
@@ -148,7 +147,7 @@ void loop() {
       target_tag_z = tag_z;
       target_tag_r = tag_r;
       target_heartbeat = heartbeat;
-      target_heading = wrap(target_tag_r+rot.yaw);
+      target_heading = wrap(target_tag_r + rot.yaw);
     }
 
     //TODO - multi-step alignment
@@ -159,24 +158,23 @@ void loop() {
     //1000 ms/s * m * m/s
     int error_time = (int)(1000 * error_distance / align_avg_speed);
 
-    Serial.println("Rotation Stuff!");
-    Serial.print(target_heading); Serial.print(" "); Serial.println(rot.yaw);
+    //Serial.println("Rotation Stuff!");
+    //Serial.print(target_heading); Serial.print(" "); Serial.println(rot.yaw);
     //Serial.println("Updated Tag Tracking!");
     //Serial.print("X: "); Serial.print(x_error); Serial.print(" Z: "); Serial.println(z_error);
     //Serial.print("Distance: "); Serial.print(error_distance); Serial.print(" time: "); Serial.println(error_time);
-
-    if (millis() < target_heartbeat + error_time){
-      drive_angle = atan2(x_error, z_error); // may need to subtract robot yaw here?
+    //Serial.println(millis() - target_heartbeat);
+    if (millis() - target_heartbeat < error_time){
+      drive_angle = wrap(atan2(x_error, z_error) + target_tag_r);
       drive_power = fmin(align_gain * error_distance, 0.66);
       drive_rotation = wrap(target_heading - rot.yaw)  * 0.33;
     } else {
       drive_power = 0.0;
+      drive_rotation = 0.0;
     }
   }
 
-  if (drive_power > 0.0) {
-    drive(drive_angle, drive_power, drive_rotation);
-  }
+  drive(drive_angle, drive_power, drive_rotation);
 
 
   updateTag();

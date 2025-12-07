@@ -17,6 +17,9 @@ void configureMotor(NoU_Motor* motor) {
 }
 
 void drive(double dir, float pwr, float r) {
+  if (pwr == 0) {
+    one.set(0); two.set(0); three.set(0); four.set(0); return;
+  }
   float raw1 = pwr * cos(dir - rad1) * (1-fabs(r));
   float raw2 = pwr * cos(dir - rad2) * (1-fabs(r));
   float raw3 = pwr * cos(dir - rad3) * (1-fabs(r));
@@ -64,11 +67,11 @@ void updateTag() {
     char* token = strtok(buffer, ",");
     tag_id = atoi(token);
     token = strtok(NULL, ",");
-    tag_x = atof(token);
+    tag_x = -atof(token);
     token = strtok(NULL, ",");
     tag_z = atof(token);
     token = strtok(NULL, ",");
-    tag_r = atof(token);
+    tag_r = -atof(token);
     //Serial.print("Detected Tag ");
     //Serial.print(tag_id);
     //Serial.print(": ");
