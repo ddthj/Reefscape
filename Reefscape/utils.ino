@@ -58,7 +58,6 @@ void updateTag() {
     String newline = Serial2.readStringUntil('\n');
     int commaCount = 0;
     for (int i = 0; i < newline.length(); i++) {if (newline.charAt(i) == ',') {commaCount++;}}
-    // No crashing! Bad!
     if (commaCount != 3) {return;}
 
     char buffer[newline.length() + 1];

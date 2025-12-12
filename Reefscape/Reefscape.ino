@@ -12,18 +12,14 @@ struct euler_t {double yaw; double pitch; double roll;} rot;
 bool gyro_good = false;
 
 
-NoU_Motor one(2);
-//double rad1 = DEG_TO_RAD * 45.0;
-double rad1 = DEG_TO_RAD * 30.0;
-NoU_Motor two(3);
-//double rad2 = DEG_TO_RAD * 135.0;
-double rad2 = DEG_TO_RAD * 150.0;
-NoU_Motor three(4);
-//double rad3 = DEG_TO_RAD * 225.0;
-double rad3 = DEG_TO_RAD * 210.0;
-NoU_Motor four(1);
-//double rad4 = DEG_TO_RAD * 315.0;
-double rad4 = DEG_TO_RAD * 330.0;
+NoU_Motor one(1);
+double rad1 = DEG_TO_RAD * 35.0;
+NoU_Motor two(2);
+double rad2 = DEG_TO_RAD * 125.0;
+NoU_Motor three(3);
+double rad3 = DEG_TO_RAD * 215.0;
+NoU_Motor four(4);
+double rad4 = DEG_TO_RAD * 305.0;
 
 float joy_x, joy_y, joy_rot = 0.0;
 
@@ -48,6 +44,7 @@ u_long heartbeat = 0;
 int target_tag_id = -1;
 float target_tag_x = 0.0;
 float target_tag_z = 0.0;
+
 float target_tag_r = 0.0;
 u_long target_heartbeat = 0;
 
@@ -58,6 +55,13 @@ float align_x1 = 0.0;
 float align_gain = 5;
 float align_avg_speed = 0.25; // m/s
 u_long dead_time = 0;
+
+NoU_Servo ele_one(1);
+int ele_pos[] = {0, 90, 180};
+int ele_len = 2;
+int ele_index = 0;
+bool ele_input = false;
+
 
 
 
@@ -75,6 +79,11 @@ void setup() {
   configureMotor(&two);
   configureMotor(&three);
   configureMotor(&four);
+  two.setInverted(true);
+  three.setInverted(true);
+
+  ele_one.write(90);
+
   pinMode(tag_led, OUTPUT);
   RSL::initialize();
   RSL::setState(RSL_DISABLED);
@@ -95,6 +104,20 @@ void loop() {
     } else {
       auto_align = 0;
     }
+
+    if (!ele_input) {
+      if (PestoLink.buttonHeld(12) && ele_index < ele_len){
+        ele_input = true;
+        ele_index++;
+        ele_one.write(ele_pos[ele_index]);
+      } else if (PestoLink.buttonHeld(13) && ele_index > 0){
+        ele_input = true;
+        ele_index--;
+        ele_one.write(ele_pos[ele_index]);
+      }
+    } else if (!PestoLink.buttonHeld(12) && !PestoLink.buttonHeld(13)){
+      ele_input = false;
+    }  
     
 
     if (toggle_drive == false){
